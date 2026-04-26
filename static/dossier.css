@@ -1,0 +1,465 @@
+/* Dossier reader skin for Jurassic Left Behind. */
+.dossier-reader {
+    --color-base: #e9e2d2;
+    --color-contrast: #1c1a16;
+    --color-heading: #1c1a16;
+    --color-primary: #1c1a16;
+    --color-primary-hover: #9f2a20;
+    --color-secondary: #756d5d;
+    --color-accent: #d9cfb8;
+    --dossier-accent: #b12b1f;
+    --dossier-paper: #e9e2d2;
+    --dossier-paper-2: #dbd2bc;
+    --dossier-rule: rgba(28, 26, 22, 0.34);
+    --font-body: 'Cardo', Georgia, serif;
+    --font-heading: 'Inter', 'JetBrains Mono', monospace;
+    background:
+        repeating-linear-gradient(0deg, rgba(28, 26, 22, 0.035) 0 1px, transparent 1px 27px),
+        radial-gradient(circle at 20% 0%, rgba(177, 43, 31, 0.10), transparent 32rem),
+        var(--dossier-paper);
+    color: var(--color-contrast);
+    overflow-x: hidden;
+}
+
+.dossier-reader *,
+.dossier-reader *::before,
+.dossier-reader *::after {
+    box-sizing: border-box;
+}
+
+.dossier-reader[data-theme="dark"],
+[data-theme="dark"].dossier-reader {
+    --color-base: #0e1410;
+    --color-contrast: #c8d4bd;
+    --color-heading: #e2ead8;
+    --color-primary: #e2ead8;
+    --color-primary-hover: #e04a3d;
+    --color-secondary: #88977f;
+    --color-accent: #161d17;
+    --dossier-accent: #e04a3d;
+    --dossier-paper: #0e1410;
+    --dossier-paper-2: #161d17;
+    --dossier-rule: rgba(200, 212, 189, 0.28);
+    background:
+        repeating-linear-gradient(0deg, rgba(200, 212, 189, 0.05) 0 1px, transparent 1px 5px),
+        radial-gradient(circle at 20% 0%, rgba(224, 74, 61, 0.12), transparent 30rem),
+        var(--dossier-paper);
+}
+
+@media (prefers-color-scheme: dark) {
+    .dossier-reader:not([data-theme="light"]) {
+        --color-base: #0e1410;
+        --color-contrast: #c8d4bd;
+        --color-heading: #e2ead8;
+        --color-primary: #e2ead8;
+        --color-primary-hover: #e04a3d;
+        --color-secondary: #88977f;
+        --color-accent: #161d17;
+        --dossier-accent: #e04a3d;
+        --dossier-paper: #0e1410;
+        --dossier-paper-2: #161d17;
+        --dossier-rule: rgba(200, 212, 189, 0.28);
+        background:
+            repeating-linear-gradient(0deg, rgba(200, 212, 189, 0.05) 0 1px, transparent 1px 5px),
+            radial-gradient(circle at 20% 0%, rgba(224, 74, 61, 0.12), transparent 30rem),
+            var(--dossier-paper);
+    }
+}
+
+.dossier-reader header,
+.dossier-reader main,
+.dossier-reader footer {
+    background: transparent;
+}
+
+.dossier-reader header {
+    max-width: min(900px, calc(100vw - 28px));
+    margin: 18px auto 0;
+    padding: 18px clamp(14px, 4vw, 32px) 20px;
+    border: 1px solid var(--color-contrast);
+    box-shadow: 5px 5px 0 rgba(28, 26, 22, 0.18);
+    background-color: color-mix(in srgb, var(--dossier-paper) 88%, transparent);
+    text-align: left;
+}
+
+.dossier-reader main {
+    max-width: min(820px, calc(100vw - 28px));
+    margin: 16px auto;
+    padding: clamp(14px, 4vw, 30px);
+    border: 1px solid var(--dossier-rule);
+    background-color: color-mix(in srgb, var(--dossier-paper) 86%, transparent);
+}
+
+.dossier-reader footer {
+    max-width: min(820px, calc(100vw - 28px));
+    margin: 24px auto;
+    padding: 18px 0 28px;
+    border-top: 1px dashed var(--color-secondary);
+}
+
+.dossier-filebar,
+.dossier-kicker,
+.dossier-stamp-row,
+.dossier-reader .chapter-nav,
+.dossier-reader .chapter-nav-bottom,
+.dossier-reader .chapter-dropdown,
+.dossier-reader .reading-config,
+.dossier-reader .toc-nav {
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.dossier-filebar {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    color: var(--color-secondary);
+    font-size: 0.72rem;
+    line-height: 1.35;
+}
+
+.dossier-kicker {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 18px;
+    color: var(--color-heading);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.dossier-kicker-mark {
+    width: 15px;
+    height: 15px;
+    border: 1px solid var(--color-contrast);
+    display: inline-block;
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.dossier-kicker-mark::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    background: var(--dossier-accent);
+}
+
+.dossier-kicker-line {
+    height: 1px;
+    min-width: 24px;
+    flex: 1;
+    background: var(--color-contrast);
+    opacity: 0.65;
+}
+
+.dossier-stamp-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 20px;
+    align-items: flex-start;
+}
+
+.dossier-stamp {
+    display: inline-block;
+    border: 2px solid var(--dossier-accent);
+    color: var(--dossier-accent);
+    border-radius: 2px;
+    padding: 4px 10px 3px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    transform: rotate(-6deg);
+}
+
+.dossier-stamp-secondary {
+    color: var(--color-contrast);
+    border-color: var(--color-contrast);
+    transform: rotate(3deg);
+}
+
+.dossier-reader header h1 {
+    font-family: 'Cardo', Georgia, serif;
+    font-size: clamp(2rem, 10vw, 4.1rem);
+    line-height: 0.96;
+    letter-spacing: 0;
+    margin: 12px 0;
+    max-width: 13ch;
+}
+
+.dossier-reader header h2 {
+    font-family: var(--font-heading);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dossier-accent);
+    font-size: 0.86rem;
+}
+
+.dossier-reader .breadcrumbs {
+    text-align: left;
+    font-family: var(--font-heading);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+}
+
+.dossier-reader .chapter-nav,
+.dossier-reader .chapter-nav-bottom,
+.dossier-reader .chapter-nav-after-content,
+.dossier-reader .toc-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 14px 0;
+}
+
+.dossier-reader nav a,
+.dossier-reader .chapter-nav a,
+.dossier-reader .chapter-nav-bottom a,
+.dossier-reader .toc-nav a,
+.dossier-reader .download-link,
+.dossier-reader button,
+.dossier-reader select,
+.dossier-reader .tag,
+.dossier-reader .current-language {
+    border: 1px solid var(--color-contrast);
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-contrast);
+    text-decoration: none;
+    padding: 8px 10px;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dossier-reader nav a:hover,
+.dossier-reader .chapter-nav a:hover,
+.dossier-reader .chapter-nav-bottom a:hover,
+.dossier-reader .toc-nav a:hover,
+.dossier-reader .download-link:hover {
+    background: var(--color-contrast);
+    color: var(--dossier-paper);
+}
+
+.dossier-reader .chapter-dropdown,
+.dossier-reader .reading-config details,
+.dossier-reader .story-metadata,
+.dossier-reader .chapter-metadata,
+.dossier-reader .latest-chapter-read,
+.dossier-reader .downloads-section,
+.dossier-reader .glossary-term-card,
+.dossier-reader .related-chapter-card {
+    border: 1px solid var(--dossier-rule);
+    border-radius: 0;
+    background: var(--dossier-paper-2);
+    box-shadow: none;
+}
+
+.dossier-reader .chapter-metadata {
+    max-width: min(68ch, 100%);
+    margin: 16px 0 0;
+    padding: 14px 16px;
+    color: var(--color-contrast);
+}
+
+.dossier-reader .chapter-metadata strong,
+.dossier-reader .metadata-item h3 {
+    font-family: var(--font-heading);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-heading);
+    font-size: 0.78rem;
+}
+
+.dossier-reader .status-value {
+    background: transparent;
+    color: var(--dossier-accent);
+    border: 1px solid var(--dossier-accent);
+    border-radius: 0;
+}
+
+.dossier-reader .chapter-dropdown {
+    padding: 12px;
+    margin: 12px 0;
+}
+
+.dossier-reader .chapter-dropdown select,
+.dossier-reader .reading-config select,
+.dossier-reader .glossary-search-input {
+    max-width: 100%;
+    background: var(--dossier-paper);
+    color: var(--color-contrast);
+    border: 1px solid var(--color-contrast);
+    border-radius: 0;
+}
+
+.dossier-reader .chapter-content {
+    max-width: min(68ch, 100%);
+    padding: 8px 0 24px;
+}
+
+.dossier-reader .chapter-content h1 {
+    font-family: 'Cardo', Georgia, serif;
+    font-size: clamp(2rem, 8vw, 3.2rem);
+    line-height: 1.04;
+    letter-spacing: 0;
+    margin: 0.4em 0 0.8em;
+}
+
+.dossier-reader .chapter-content p {
+    font-family: var(--reading-font-family, 'Cardo', Georgia, serif);
+    font-size: clamp(1.05rem, 2.7vw, 1.18rem);
+    line-height: var(--reading-line-height, 1.72);
+    text-align: left;
+}
+
+.dossier-reader .chapter-content img,
+.dossier-reader .story-cover-image,
+.dossier-reader .arc-cover-image {
+    border: 1px solid var(--color-contrast);
+    border-radius: 0;
+    background: var(--dossier-paper-2);
+    padding: 4px;
+    box-shadow: 4px 4px 0 rgba(28, 26, 22, 0.16);
+}
+
+.dossier-reader .chapter-content img {
+    width: min(100%, 760px);
+    max-height: min(72vh, 720px);
+    object-fit: contain;
+    margin: 1.3rem auto;
+}
+
+.dossier-reader .story-tags .tags,
+.dossier-reader .chapter-tags-inline,
+.dossier-reader .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.dossier-reader .arc {
+    border-top: 1px solid var(--color-contrast);
+    padding-top: 14px;
+}
+
+.dossier-reader .arc h3,
+.dossier-reader .glossary-category h3 {
+    font-family: var(--font-heading);
+    color: var(--dossier-accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.dossier-reader .arc li {
+    gap: 10px;
+    border-bottom: 1px dashed var(--dossier-rule);
+    padding: 8px 0;
+}
+
+.dossier-reader .arc li a {
+    font-family: 'Cardo', Georgia, serif;
+    font-size: 1.1rem;
+    border: 0;
+    padding: 0;
+    min-height: auto;
+    display: inline;
+    text-decoration: none;
+}
+
+.dossier-reader .arc li a:hover {
+    background: transparent;
+    color: var(--dossier-accent);
+    text-decoration: underline;
+}
+
+.dossier-reader .metadata-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.dossier-reader .image-modal {
+    background: rgba(0, 0, 0, 0.86);
+}
+
+@media (max-width: 768px) {
+    .dossier-reader header,
+    .dossier-reader main {
+        max-width: calc(100vw - 18px);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .dossier-reader main {
+        padding: 14px;
+    }
+
+    .dossier-reader .chapter-content {
+        padding: 6px 0 22px;
+    }
+
+    .dossier-reader .chapter-nav,
+    .dossier-reader .chapter-nav-bottom,
+    .dossier-reader .chapter-nav-after-content,
+    .dossier-reader .toc-nav {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .dossier-reader .chapter-nav a,
+    .dossier-reader .chapter-nav-bottom a,
+    .dossier-reader .chapter-nav-after-content a,
+    .dossier-reader .toc-nav a {
+        width: 100%;
+        margin: 0;
+    }
+
+    .dossier-filebar {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .dossier-reader .arc {
+        display: block;
+    }
+
+    .dossier-reader .arc li {
+        align-items: stretch;
+    }
+
+    .dossier-reader .chapter-date {
+        white-space: normal;
+    }
+
+    .dossier-reader .chapter-content img {
+        max-height: 68vh;
+    }
+}
+
+@media (max-width: 430px) {
+    .dossier-reader header {
+        padding: 14px 12px 16px;
+        box-shadow: 3px 3px 0 rgba(28, 26, 22, 0.16);
+    }
+
+    .dossier-reader header h1 {
+        max-width: 100%;
+    }
+
+    .dossier-reader .dossier-kicker {
+        font-size: 0.64rem;
+        gap: 7px;
+    }
+
+    .dossier-reader .chapter-content p {
+        font-size: 1.04rem;
+        line-height: 1.66;
+    }
+}
