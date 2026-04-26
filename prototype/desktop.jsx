@@ -221,7 +221,7 @@ function DesktopTOC({ tw, onOpen, onBack, onGlossary, currentChapter, completedC
 function DesktopReader({ tw, chapter, onBack, onPrev, onNext, onTooltip, activeTooltip, onOpenChapter, completedChapters }) {
   const p = getPalette(tw);
   const n = window.NOVEL;
-  const chData = chapter === 1 ? n.sampleChapter : (window.NOVEL_CH[chapter] || null);
+  const chData = window.NOVEL_CH[chapter] || null;
   const chMeta = n.chapters[chapter - 1];
   const completedSet = new Set(completedChapters);
   const [revealed, setRevealed] = React.useState(new Set());
@@ -236,58 +236,84 @@ function DesktopReader({ tw, chapter, onBack, onPrev, onNext, onTooltip, activeT
 
   const REDACT_TARGETS = ['InGen', 'asset', 'incident residue'];
 
+  const parseInline = (text, baseKey) => {
+    const result = [];
+    const italicParts = text.split(/(<i>[^<]*<\/i>)/g);
+    italicParts.forEach((part, ii) => {
+      if (part.startsWith('<i>') && part.endsWith('</i>')) {
+        result.push(<i key={`${baseKey}-i${ii}`}>{part.slice(3, -4)}</i>);
+      } else {
+        const rtok = part.split(/(\bInGen\b|\basset\b|\bincident residue\b)/g);
+        rtok.forEach((tok, ti) => {
+          if (REDACT_TARGETS.includes(tok)) {
+            const id = `${baseKey}-r${ii}-${ti}`;
+            const isRev = revealed.has(id);
+            result.push(
+              <span key={id} onClick={(e) => {
+                e.stopPropagation();
+                setRevealed(s => { const ns = new Set(s); ns.add(id); return ns; });
+              }} style={{
+                background: isRev ? 'transparent' : p.ink,
+                color: isRev ? p.accent : 'transparent',
+                cursor: 'pointer', padding: '0 2px',
+                transition: 'background 0.3s',
+                borderBottom: isRev ? `1px dotted ${p.accent}` : 'none',
+                fontWeight: isRev ? 600 : 400,
+              }}>{isRev ? tok : '█'.repeat(Math.max(3, tok.length))}</span>
+            );
+          } else {
+            result.push(tok);
+          }
+        });
+      }
+    });
+    return result;
+  };
+
   const renderPara = (text, key) => {
-    const parts = text.split(/(\{\{[^}]+\}\})/g);
+    const gParts = text.split(/(\{\{[^}]+\}\})/g);
+    const content = gParts.flatMap((part, i) => {
+      const m = part.match(/^\{\{(.+)\}\}$/);
+      if (m) {
+        return [<span key={`${key}-g${i}`} onClick={() => onTooltip(m[1])} style={{
+          color: p.accent, cursor:'pointer',
+          textDecoration:`underline dotted ${p.accent}99`,
+          textUnderlineOffset: 4, fontWeight: 500,
+        }}>{m[1]}</span>];
+      }
+      return parseInline(part, `${key}-p${i}`);
+    });
     return (
       <p key={key} style={{
         fontFamily: tw.bodyFont === 'mono' ? '"JetBrains Mono", monospace' : '"Newsreader", Georgia, serif',
-        fontSize: tw.fontSize + 2,
-        lineHeight: tw.lineHeight,
-        color: p.ink,
+        fontSize: tw.fontSize + 2, lineHeight: tw.lineHeight, color: p.ink,
         margin: '0 0 1.2em',
         textAlign: tw.justify ? 'justify' : 'left',
-        textWrap: 'pretty',
-        hyphens: tw.justify ? 'auto' : 'manual',
-      }}>
-        {parts.map((part, i) => {
-          const m = part.match(/^\{\{(.+)\}\}$/);
-          if (!m) {
-            const tokens = part.split(/(\bInGen\b|\basset\b|\bincident residue\b)/g);
-            return tokens.map((tok, ti) => {
-              if (REDACT_TARGETS.includes(tok)) {
-                const id = `${key}-${i}-${ti}`;
-                const isRev = revealed.has(id);
-                return (
-                  <span key={ti} onClick={(e) => {
-                    e.stopPropagation();
-                    setRevealed(s => { const ns = new Set(s); ns.add(id); return ns; });
-                  }} style={{
-                    background: isRev ? 'transparent' : p.ink,
-                    color: isRev ? p.accent : 'transparent',
-                    cursor: 'pointer', padding: '0 2px',
-                    transition: 'background 0.3s',
-                    borderBottom: isRev ? `1px dotted ${p.accent}` : 'none',
-                    fontWeight: isRev ? 600 : 400,
-                  }}>{isRev ? tok : '█'.repeat(Math.max(3, tok.length))}</span>
-                );
-              }
-              if (tok.startsWith('<i>') && tok.endsWith('</i>')) {
-                return <i key={ti}>{tok.slice(3, -4)}</i>;
-              }
-              return tok;
-            });
-          }
-          const term = m[1];
-          return (
-            <span key={i} onClick={() => onTooltip(term)} style={{
-              color: p.accent, cursor:'pointer',
-              textDecoration:`underline dotted ${p.accent}99`,
-              textUnderlineOffset: 4, fontWeight: 500,
-            }}>{term}</span>
-          );
-        })}
-      </p>
+        textWrap: 'pretty', hyphens: tw.justify ? 'auto' : 'manual',
+      }}>{content}</p>
     );
+  };
+
+  const renderItem = (item, key) => {
+    if (item && typeof item === 'object' && item.type === 'image') {
+      const chStr = String(chapter).padStart(3, '0');
+      return (
+        <div key={key} style={{ margin: '2em 0', lineHeight: 0 }}>
+          <img
+            src={`images/jurassic-left-behind/chapter-${chStr}/${item.src}`}
+            alt={item.alt || ''}
+            onError={(e) => { e.target.parentNode.style.display = 'none'; }}
+            style={{ width:'100%', display:'block', border: `1px solid ${p.faint}40` }}
+          />
+          {item.alt && (
+            <div style={{ fontFamily:'"JetBrains Mono", monospace', fontSize: 9, color: p.faint, letterSpacing: '0.1em', padding: '5px 4px 0', lineHeight: 1.4 }}>
+              {item.alt}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return renderPara(item, key);
   };
 
   return (
@@ -389,7 +415,7 @@ function DesktopReader({ tw, chapter, onBack, onPrev, onNext, onTooltip, activeT
             )}
 
             {chData && chData.paragraphs ? (
-              chData.paragraphs.map((para, i) => renderPara(para, i))
+              chData.paragraphs.map((item, i) => renderItem(item, i))
             ) : (
               <div style={{ padding: '48px 0', textAlign:'center', fontFamily:'"JetBrains Mono", monospace', color: p.faint }}>
                 <div style={{ fontSize: 48, marginBottom: 18, letterSpacing: '0.2em' }}>█ █ █</div>
