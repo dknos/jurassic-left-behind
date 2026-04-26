@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Jurassic Left Behind — Dossier Reader</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A 1993 film-continuity Jurassic Park side-story. Mateo Valverde was a temporary sanitation contractor. His badge was valid for fourteen days.">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; background: #1f2024; font-family: -apple-system, system-ui, sans-serif; min-height:100vh; }
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body.mobile-mode #root { display:flex; align-items:center; justify-content:center; min-height:100vh; padding: 20px; }
+  body.desktop-mode { background: var(--page-bg, #E9E2D2); }
+  body.desktop-mode #root { display:block; min-height:100vh; }
+
+  @keyframes stamp-slam-in {
+    0%   { transform: scale(2.2) rotate(-12deg); opacity: 0; }
+    60%  { transform: scale(0.9) rotate(-12deg); opacity: 1; }
+    80%  { transform: scale(1.05) rotate(-12deg); }
+    100% { transform: scale(1) rotate(-12deg); opacity: 1; }
+  }
+  .stamp-slam-anim { animation: stamp-slam-in 420ms cubic-bezier(.2,.9,.3,1.4) both; }
+
+  @keyframes drawer-rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .drawer-rise { animation: drawer-rise 280ms cubic-bezier(.2,.7,.3,1) both; }
+
+  @keyframes sidecar-slide { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  .sidecar-slide { animation: sidecar-slide 260ms cubic-bezier(.2,.7,.3,1) both; }
+
+  @keyframes screen-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .screen-fade { animation: screen-fade 200ms ease-out both; }
+
+  .mode-pill {
+    position: fixed; top: 14px; left: 14px; z-index: 1000;
+    display: flex; gap: 0; background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 999px;
+    font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em;
+    backdrop-filter: blur(8px); padding: 3px;
+  }
+  .mode-pill button {
+    background: transparent; border: none; color: rgba(255,255,255,0.7);
+    padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    font-family: inherit; font-size: inherit; letter-spacing: inherit;
+  }
+  .mode-pill button.active { background: rgba(255,255,255,0.95); color: #111; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="mode-pill" id="mode-pill"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data/content.js"></script>
+<script src="data/chapters.js"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel" src="prototype/shared.jsx"></script>
+<script type="text/babel" src="prototype/cover.jsx"></script>
+<script type="text/babel" src="prototype/toc.jsx"></script>
+<script type="text/babel" src="prototype/reader.jsx"></script>
+<script type="text/babel" src="prototype/glossary.jsx"></script>
+<script type="text/babel" src="prototype/desktop.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "accent": "red",
+  "fontSize": 17,
+  "lineHeight": 1.62,
+  "bodyFont": "serif",
+  "justify": false,
+  "ornaments": true,
+  "stamps": 1,
+  "texture": 1,
+  "layout": "auto"
+}/*EDITMODE-END*/;
+
+function useDetectedLayout(override) {
+  const [w, setW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  useEffect(() => {
+    const onResize = () => setW(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  if (override === 'mobile') return 'mobile';
+  if (override === 'desktop') return 'desktop';
+  return w < 900 ? 'mobile' : 'desktop';
+}
+
+function App() {
+  const [tw, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const layout = useDetectedLayout(tw.layout);
+
+  useEffect(() => {
+    document.body.classList.toggle('mobile-mode', layout === 'mobile');
+    document.body.classList.toggle('desktop-mode', layout === 'desktop');
+    const bg = tw.theme === 'light' ? '#E9E2D2' : tw.theme === 'blackout' ? '#000' : '#0E1410';
+    document.body.style.setProperty('--page-bg', bg);
+    if (layout === 'desktop') document.body.style.background = bg;
+    else document.body.style.background = '#1f2024';
+  }, [layout, tw.theme]);
+
+  const [screen, setScreen] = useState('cover');
+  const [chapter, setChapter] = useState(1);
+  const [completed, setCompleted] = useState([]);
+  const [activeTooltip, setActiveTooltip] = useState(null);
+  const [typeMenuOpen, setTypeMenuOpen] = useState(false);
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
+
+  const openChapter = (n) => {
+    setChapter(n);
+    setActiveTooltip(null); setTypeMenuOpen(false); setEvidenceOpen(false);
+    setScreen('reader');
+  };
+  const goPrev = () => { if (chapter > 1) openChapter(chapter - 1); };
+  const goNext = () => {
+    const total = window.NOVEL.chapterCount;
+    if (chapter < total) {
+      setCompleted(c => Array.from(new Set([...c, chapter])));
+      openChapter(chapter + 1);
+    }
+  };
+
+  let mobileBody;
+  if (screen === 'cover') mobileBody = <CoverScreen tw={tw} onOpen={openChapter} onTOC={() => setScreen('toc')} onGlossary={() => setScreen('glossary')}/>;
+  else if (screen === 'toc') mobileBody = <TOCScreen tw={tw} currentChapter={chapter} completedChapters={completed} onOpen={openChapter} onBack={() => setScreen('cover')} onGlossary={() => setScreen('glossary')}/>;
+  else if (screen === 'reader') mobileBody = <ReaderScreen tw={tw} chapter={chapter} onBack={() => setScreen('toc')} onPrev={goPrev} onNext={goNext} onTooltip={setActiveTooltip} activeTooltip={activeTooltip} onTypeMenu={() => setTypeMenuOpen(v=>!v)} typeMenuOpen={typeMenuOpen} onEvidence={() => setEvidenceOpen(v=>!v)} evidenceOpen={evidenceOpen}/>;
+  else if (screen === 'glossary') mobileBody = <GlossaryScreen tw={tw} onBack={() => setScreen('cover')} />;
+
+  let desktopBody;
+  if (screen === 'cover') desktopBody = <DesktopCover tw={tw} onOpen={openChapter} onTOC={() => setScreen('toc')} onGlossary={() => setScreen('glossary')}/>;
+  else if (screen === 'toc') desktopBody = <DesktopTOC tw={tw} currentChapter={chapter} completedChapters={completed} onOpen={openChapter} onBack={() => setScreen('cover')} onGlossary={() => setScreen('glossary')}/>;
+  else if (screen === 'reader') desktopBody = <DesktopReader tw={tw} chapter={chapter} onBack={() => setScreen('toc')} onPrev={goPrev} onNext={goNext} onTooltip={setActiveTooltip} activeTooltip={activeTooltip} onOpenChapter={openChapter} completedChapters={completed}/>;
+  else if (screen === 'glossary') desktopBody = <DesktopGlossary tw={tw} onBack={() => setScreen('cover')} />;
+
+  return (
+    <>
+      {layout === 'mobile' ? (
+        <IOSDevice width={430} height={932} dark={tw.theme !== 'light'}>
+          <div key={'m-' + screen + '-' + chapter} className="screen-fade" style={{ height:'100%', overflowY:'auto' }}>
+            {mobileBody}
+          </div>
+        </IOSDevice>
+      ) : (
+        <div key={'d-' + screen + '-' + chapter} className="screen-fade">
+          {desktopBody}
+        </div>
+      )}
+
+      {ReactDOM.createPortal(
+        <ModePill current={tw.layout} detected={layout} onChange={v => setTweak('layout', v)}/>,
+        document.getElementById('mode-pill')
+      )}
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Layout">
+          <TweakRadio label="Device" value={tw.layout} onChange={v=>setTweak('layout', v)} options={[
+            { value:'auto',    label:'Auto' },
+            { value:'mobile',  label:'Mobile' },
+            { value:'desktop', label:'Desktop' },
+          ]}/>
+        </TweakSection>
+
+        <TweakSection title="Theme">
+          <TweakRadio label="Theme" value={tw.theme} onChange={v=>setTweak('theme', v)} options={[
+            { value:'light', label:'Paper' },
+            { value:'dark',  label:'Archive' },
+            { value:'blackout', label:'Blackout' },
+          ]}/>
+          <TweakSelect label="Accent" value={tw.accent} onChange={v=>setTweak('accent', v)} options={[
+            { value:'red',   label:'Alarm Red' },
+            { value:'amber', label:'Caution Amber' },
+            { value:'cyan',  label:'Diagnose Cyan' },
+            { value:'chart', label:'Signal Chartreuse' },
+          ]}/>
+        </TweakSection>
+
+        <TweakSection title="Type">
+          <TweakRadio label="Body face" value={tw.bodyFont} onChange={v=>setTweak('bodyFont', v)} options={[
+            { value:'serif', label:'Serif' },
+            { value:'mono',  label:'Mono' },
+          ]}/>
+          <TweakSlider label="Font size" min={13} max={22} step={0.5} value={tw.fontSize} onChange={v=>setTweak('fontSize', v)} unit="px"/>
+          <TweakSlider label="Line height" min={1.3} max={1.9} step={0.02} value={tw.lineHeight} onChange={v=>setTweak('lineHeight', v)}/>
+          <TweakToggle label="Justify text" value={tw.justify} onChange={v=>setTweak('justify', v)}/>
+        </TweakSection>
+
+        <TweakSection title="Atmosphere">
+          <TweakSlider label="Stamp intensity" min={0} max={1.5} step={0.05} value={tw.stamps} onChange={v=>setTweak('stamps', v)}/>
+          <TweakSlider label="Paper texture" min={0} max={2} step={0.1} value={tw.texture} onChange={v=>setTweak('texture', v)}/>
+          <TweakToggle label="Section ornaments" value={tw.ornaments} onChange={v=>setTweak('ornaments', v)}/>
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+function ModePill({ current, detected, onChange }) {
+  const opts = [
+    { v: 'auto',    l: `AUTO · ${detected.toUpperCase()}` },
+    { v: 'mobile',  l: 'MOBILE' },
+    { v: 'desktop', l: 'DESKTOP' },
+  ];
+  return (
+    <>
+      {opts.map(o => (
+        <button key={o.v}
+          className={current === o.v ? 'active' : ''}
+          onClick={() => onChange(o.v)}>{o.l}</button>
+      ))}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
